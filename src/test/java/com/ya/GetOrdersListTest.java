@@ -1,13 +1,24 @@
 package com.ya;
 
+import com.ya.apiclient.CourierClient;
+import com.ya.apiclient.OrderClient;
+import com.ya.model.Courier;
+import com.ya.model.Order;
+import com.ya.utils.CourierCredentials;
+import com.ya.utils.CourierGenerator;
+import com.ya.utils.OrderGenerator;
+import io.qameta.allure.Description;
+import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.ValidatableResponse;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
 import java.util.List;
+
 import static org.junit.Assert.*;
 
-public class OrdersTest {
+public class GetOrdersListTest {
 
     CourierClient courierClient;
     Courier courier;
@@ -23,7 +34,6 @@ public class OrdersTest {
         courier = CourierGenerator.getRandom();
         courierClient.create(courier);
         orderClient = new OrderClient();
-
     }
 
     @After
@@ -32,32 +42,26 @@ public class OrdersTest {
         orderClient.cancel(track);
     }
 
-    //Add order cancel method
-
     @Test
+    @DisplayName("Get orders list")
+    @Description("Create order, get order Id, take order for courier, get orders list")
     public void getOrdersReturnsTest() {
 
-        order = OrderGenerator.setData();
+        order = OrderGenerator.getOrderData();
 
-        //Create order and extract "track" to var track
         ValidatableResponse orderResponse = orderClient.createOrder(order);
         track = orderResponse.extract().path("track");
 
-        //get order by track and extract to var orderId
         ValidatableResponse orderIdResponse = orderClient.getOrderId(track);
         orderId = orderIdResponse.extract().path("order.id");
 
-        //Login courier and extract "id" to var courierId
         ValidatableResponse loginResponse = courierClient.login(new CourierCredentials(courier.getLogin(), courier.getPassword()));
         courierId = loginResponse.extract().path("id");
 
-        //Take order
         orderClient.takeOrder(orderId, courierId);
 
         ValidatableResponse response = orderClient.getOrdersList(courierId);
         List<Object> orders = response.extract().jsonPath().getList("orders");
         assertFalse(orders.isEmpty());
-
     }
-
 }

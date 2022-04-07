@@ -1,16 +1,19 @@
 package com.ya;
 
+import com.ya.apiclient.CourierClient;
+import com.ya.model.Courier;
+import com.ya.utils.CourierCredentials;
+import com.ya.utils.CourierGenerator;
+import io.qameta.allure.Description;
+import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.ValidatableResponse;
-import org.apache.http.auth.Credentials;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.apache.http.HttpStatus.SC_OK;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertEquals;
 
-public class CourierTest {
+public class CourierLoginTest {
 
     CourierClient courierClient;
     Courier courier;
@@ -29,15 +32,15 @@ public class CourierTest {
     }
 
     @Test
-    public void courierCanLoginWithValidCredentials() {
+    @DisplayName("Login courier with valid credentials")
+    @Description("Login for courier and extract id from response")
+    public void courierCanLoginWithValidCredentialsTest() {
         ValidatableResponse loginResponse = courierClient.login(new CourierCredentials(courier.getLogin(), courier.getPassword()));
         int statusCode = loginResponse.extract().statusCode();
         courierId = loginResponse.extract().path("id");
+        boolean actual = courierId > 0;
 
-        assertThat("Courier cannot login", statusCode, equalTo(SC_OK));
-        assertThat("Courier ID is incorrect", courierId, is(not(0)));
-
+        assertEquals("Courier cannot login", 200, statusCode);
+        assertEquals("Courier ID is incorrect", true, actual);
     }
-
-
 }
